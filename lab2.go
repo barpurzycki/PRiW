@@ -39,7 +39,9 @@ func main() {
 	}
 
 	fmt.Println("Suma wartości tablicy: ", statystyka(tab))
+	wg.Add(3)
 	go czytacz()
 	go czytacz()
 	go czytacz()
+	wg.Wait()
 }
