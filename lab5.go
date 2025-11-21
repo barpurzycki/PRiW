@@ -5,47 +5,43 @@ import (
 	"time"
 )
 
-func l_pierwsza(kanal chan int) {
+func liczPierwsze(kanalCzasNaKoniec chan bool) {
 	n := 2
+	ostatniaPierwsza := 2
 
 	for {
-		czyPierwsza := true
+		select {
+		case <-kanalCzasNaKoniec:
+			fmt.Println("Koniec liczenia. Ostatnia liczba pierwsza:", ostatniaPierwsza)
+			return
 
-		if n < 2 {
-			czyPierwsza = false
-		} else {
+		default:
+			czyPierwsza := true
+
 			for i := 2; i < n; i++ {
 				if n%i == 0 {
 					czyPierwsza = false
 					break
 				}
 			}
-		}
-		if czyPierwsza {
-			kanal <- n
-			time.Sleep(1 * time.Millisecond)
-		}
 
-		n++
+			if czyPierwsza {
+				ostatniaPierwsza = n
+				time.Sleep(1 * time.Millisecond)
+			}
+
+			n++
+		}
 	}
 }
 
 func main() {
-	var kanal1, kanal2, kanal3 chan int
-	kanal1 = make(chan int)
-	kanal2 = make(chan int)
-	kanal3 = make(chan int)
+	kanalCzasNaKoniec := make(chan bool)
 
-	go l_pierwsza(kanal1)
-	go l_pierwsza(kanal2)
-	go l_pierwsza(kanal3)
+	go liczPierwsze(kanalCzasNaKoniec)
 
-	select {
-		case liczba_pierwsza := <- kanal1:
-			fmt.Println("Odczyt z kanalu 1, liczba pierwsza: ", liczba_pierwsza)
-		case liczba_pierwsza := <- kanal2:
-			fmt.Println("Odczyt z kanalu 2, liczba pierwsza: ", liczba_pierwsza)
-		case liczba_pierwsza := <- kanal3:
-			fmt.Println("Odczyt z kanalu 3, liczba pierwsza: ", liczba_pierwsza)
-	}
+	time.Sleep(10 * time.Millisecond)
+	kanalCzasNaKoniec <- true
+
+	time.Sleep(1 * time.Second)
 }
