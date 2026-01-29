@@ -11,11 +11,10 @@ import (
 	"time"
 )
 
-var (
-	mu          sync.Mutex
-	konto       int = 1000
-	zablokowane int = 0
-)
+var mu sync.Mutex
+var konto int = 1000
+var zablokowane int = 0
+
 
 func status(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
