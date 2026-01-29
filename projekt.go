@@ -15,7 +15,6 @@ var mu sync.Mutex
 var konto int = 1000
 var zablokowane int = 0
 
-
 func status(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -38,13 +37,13 @@ func pobierz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	x, err := strconv.Atoi(rest)
-	if err != nil || x <= 0 {
+	kwota, err := strconv.Atoi(rest)
+	if err != nil || kwota <= 0 {
 		http.Error(w, "Kwota musi być liczbą całkowitą dodatnią: /pobierz/200", http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Próba pobrania, start, kwota: %d", x)
+	log.Printf("Próba pobrania, start, kwota: %d", kwota)
 
 	delay := time.Duration(100+rand.Intn(201)) * time.Millisecond
 	time.Sleep(delay)
@@ -52,12 +51,12 @@ func pobierz(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	dostepne := konto - zablokowane
 
-	if dostepne < x {
-		y := dostepne
-		z := zablokowane
+	if dostepne < kwota {
+		srodkiNiezablokowane := dostepne
+		srodkiZablokowane := zablokowane
 		mu.Unlock()
 
-		wiadomosc := fmt.Sprintf("Próba pobrania, blokada niemożliwa, kwota: %d, pozostało niezablokowanych środków: %d i zablokowanych: %d\n", x, y, z)
+		wiadomosc := fmt.Sprintf("Próba pobrania, blokada niemożliwa, kwota: %d, pozostało niezablokowanych środków: %d i zablokowanych: %d\n", kwota, srodkiNiezablokowane, srodkiZablokowane)
 
 		log.Print(strings.TrimSpace(wiadomosc))
 		fmt.Fprint(w, wiadomosc)
@@ -65,21 +64,21 @@ func pobierz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	zablokowane += x
+	zablokowane += kwota
 	mu.Unlock()
 
-	log.Printf("Próba pobrania, blokada kwoty: %d", x)
+	log.Printf("Próba pobrania, blokada kwoty: %d", kwota)
 
 	time.Sleep(3 * time.Second)
 
 	mu.Lock()
-	konto -= x
-	zablokowane -= x
-	y := konto - zablokowane
-	z := zablokowane
+	konto -= kwota
+	zablokowane -= kwota
+	srodkiNiezablokowane := konto - zablokowane
+	srodkiZablokowane := zablokowane
 	mu.Unlock()
 
-	wiadomosc := fmt.Sprintf("Próba pobrania, sukces, kwota: %d, pozostało niezablokowanych środków: %d i zablokowanych: %d\n", x, y, z)
+	wiadomosc := fmt.Sprintf("Próba pobrania, sukces, kwota: %d, pozostało niezablokowanych środków: %d i zablokowanych: %d\n", kwota, srodkiNiezablokowane, srodkiZablokowane)
 	log.Print(strings.TrimSpace(wiadomosc))
 	fmt.Fprint(w, wiadomosc)
 }
